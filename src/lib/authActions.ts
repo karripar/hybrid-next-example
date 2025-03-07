@@ -5,8 +5,9 @@ import CustomError from "../classes/CustomError";
 import bcrypt from "bcryptjs";
 import { TokenContent } from "hybrid-types/DBTypes";
 import jwt from "jsonwebtoken";
+import { redirect } from "next/navigation";
 
-export async function login(formData: FormData) {
+export const login = async (formData: FormData) => {
   // Verify credentials && get the user
   if (!process.env.JWT_SECRET) {
     throw new CustomError("Missing JWT_SECRET", 500);
@@ -35,37 +36,55 @@ export async function login(formData: FormData) {
 
   // Create the session
   const expires = new Date(Date.now() + 7 * 24 * 3600 * 1000); // 7 days (in ms)
-  const session = jwt.sign(tokenContent, key, {expiresIn: "7d"})
+  const session = jwt.sign(tokenContent, key, { expiresIn: "7d" });
 
   // Save the session in a cookie
   const cookieStore = await cookies();
   cookieStore.set("session", session, { expires, httpOnly: true });
-}
+};
 
-export async function logout() {
-  // Destroy the session
-  cookies().set("session", "", { expires: new Date(0) });
-}
+export const logout = async () => {
+  const cookieStore = await cookies();
+  cookieStore.set("session", "", { expires: new Date(0) });
+};
 
-export async function getSession() {
-  const session = cookies().get("session")?.value;
+export const getSession = async () => {
+  if (!process.env.JWT_SECRET) {
+    throw new CustomError("Missing JWT_SECRET", 500);
+  }
+  const key = process.env.JWT_SECRET as string;
+
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session")?.value;
   if (!session) return null;
-  return await decrypt(session);
-}
+  return jwt.verify(session, key) as TokenContent;
+};
 
-export async function updateSession(request: NextRequest) {
+export const updateSession = (request: NextRequest) => {
+  if (!process.env.JWT_SECRET) {
+    throw new CustomError("Missing JWT_SECRET", 500);
+  }
+  const key = process.env.JWT_SECRET as string;
+
   const session = request.cookies.get("session")?.value;
   if (!session) return;
 
   // Refresh the session so it doesn't expire
-  const parsed = await decrypt(session);
-  parsed.expires = new Date(Date.now() + 10 * 1000);
+  const tokenContent = jwt.verify(session, key) as TokenContent;
+  const expires = new Date(Date.now() + 7 * 24 * 3600 * 1000); // 7 days (in ms)
   const res = NextResponse.next();
   res.cookies.set({
     name: "session",
-    value: await encrypt(parsed),
+    value: jwt.sign(tokenContent, key, { expiresIn: "7d" }),
     httpOnly: true,
-    expires: parsed.expires,
+    expires: expires,
   });
   return res;
-}
+};
+
+export const requireAuth = async () => {
+  const session = await getSession();
+  if (!session?.user_id) {
+    redirect("/");
+  }
+};

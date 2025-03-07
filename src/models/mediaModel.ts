@@ -1,10 +1,10 @@
-import { ERROR_MESSAGES } from './../app/utils/errorMessages';
-import {ResultSetHeader, RowDataPacket} from 'mysql2';
-import {MediaItem, UserLevel} from 'hybrid-types/DBTypes';
-import promisePool from '@/app/lib/db';
-import {MessageResponse} from 'hybrid-types/MessageTypes';
-import { fetchData } from '@/app/lib/functions';
-import CustomError from '@/app/classes/CustomError';
+import { ERROR_MESSAGES } from "../utils/errorMessages";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { MediaItem, UserLevel } from "hybrid-types/DBTypes";
+import promisePool from "@/lib/db";
+import { MessageResponse } from "hybrid-types/MessageTypes";
+import { fetchData } from "@/lib/functions";
+import CustomError from "@/classes/CustomError";
 
 const uploadPath = process.env.UPLOAD_URL;
 
@@ -49,11 +49,11 @@ const BASE_MEDIA_QUERY = `
 
 const fetchAllMedia = async (
   page: number | undefined = undefined,
-  limit: number | undefined = undefined,
+  limit: number | undefined = undefined
 ): Promise<MediaItem[]> => {
   const offset = ((page || 1) - 1) * (limit || 10);
   const sql = `${BASE_MEDIA_QUERY}
-    ${limit ? 'LIMIT ? OFFSET ?' : ''}`;
+    ${limit ? "LIMIT ? OFFSET ?" : ""}`;
   const params = limit ? [uploadPath, limit, offset] : [uploadPath];
   const stmt = promisePool.format(sql, params);
 
@@ -76,10 +76,10 @@ const fetchMediaById = async (id: number): Promise<MediaItem> => {
 const postMedia = async (
   media: Omit<
     MediaItem,
-    'media_id' | 'created_at' | 'thumbnail' | 'screenshots'
-  >,
+    "media_id" | "created_at" | "thumbnail" | "screenshots"
+  >
 ): Promise<MediaItem> => {
-  const {user_id, filename, filesize, media_type, title, description} = media;
+  const { user_id, filename, filesize, media_type, title, description } = media;
   const sql = `INSERT INTO MediaItems (user_id, filename, filesize, media_type, title, description)
                VALUES (?, ?, ?, ?, ?, ?)`;
   const params = [user_id, filename, filesize, media_type, title, description];
@@ -92,18 +92,18 @@ const postMedia = async (
 };
 
 const putMedia = async (
-  media: Pick<MediaItem, 'title' | 'description'>,
+  media: Pick<MediaItem, "title" | "description">,
   id: number,
   user_id: number,
-  user_level: UserLevel['level_name'],
+  user_level: UserLevel["level_name"]
 ): Promise<MediaItem> => {
   const sql =
-    user_level === 'Admin'
-      ? 'UPDATE MediaItems SET title = ?, description = ? WHERE media_id = ?'
-      : 'UPDATE MediaItems SET title = ?, description = ? WHERE media_id = ? AND user_id = ?';
+    user_level === "Admin"
+      ? "UPDATE MediaItems SET title = ?, description = ? WHERE media_id = ?"
+      : "UPDATE MediaItems SET title = ?, description = ? WHERE media_id = ? AND user_id = ?";
 
   const params =
-    user_level === 'Admin'
+    user_level === "Admin"
       ? [media.title, media.description, id]
       : [media.title, media.description, id, user_id];
 
@@ -120,9 +120,9 @@ const putMedia = async (
 
 const checkOwnership = async (
   media_id: number,
-  user_id: number,
+  user_id: number
 ): Promise<boolean> => {
-  const sql = 'SELECT * FROM MediaItems WHERE media_id = ? AND user_id = ?';
+  const sql = "SELECT * FROM MediaItems WHERE media_id = ? AND user_id = ?";
   const params = [media_id, user_id];
   const stmt = promisePool.format(sql, params);
 
@@ -134,80 +134,80 @@ const deleteMedia = async (
   media_id: number,
   user_id: number,
   token: string,
-  level_name: UserLevel['level_name'],
+  level_name: UserLevel["level_name"]
 ): Promise<MessageResponse> => {
   const media = await fetchMediaById(media_id);
 
   if (!media) {
-    return {message: 'Media not found'};
+    return { message: "Media not found" };
   }
 
   const isOwner = await checkOwnership(media_id, user_id);
-  if (!isOwner && level_name !== 'Admin') {
+  if (!isOwner && level_name !== "Admin") {
     throw new CustomError(ERROR_MESSAGES.MEDIA.NOT_DELETED, 403);
   }
 
   media.filename = media?.filename.replace(
     process.env.UPLOAD_URL as string,
-    '',
+    ""
   );
 
   const connection = await promisePool.getConnection();
 
   await connection.beginTransaction();
 
-  await connection.execute('DELETE FROM Likes WHERE media_id = ?;', [media_id]);
+  await connection.execute("DELETE FROM Likes WHERE media_id = ?;", [media_id]);
 
-  await connection.execute('DELETE FROM Comments WHERE media_id = ?;', [
+  await connection.execute("DELETE FROM Comments WHERE media_id = ?;", [
     media_id,
   ]);
 
-  await connection.execute('DELETE FROM Ratings WHERE media_id = ?;', [
+  await connection.execute("DELETE FROM Ratings WHERE media_id = ?;", [
     media_id,
   ]);
 
-  await connection.execute('DELETE FROM MediaItemTags WHERE media_id = ?;', [
+  await connection.execute("DELETE FROM MediaItemTags WHERE media_id = ?;", [
     media_id,
   ]);
 
   const sql =
-    level_name === 'Admin'
-      ? connection.format('DELETE FROM MediaItems WHERE media_id = ?', [
+    level_name === "Admin"
+      ? connection.format("DELETE FROM MediaItems WHERE media_id = ?", [
           media_id,
         ])
       : connection.format(
-          'DELETE FROM MediaItems WHERE media_id = ? AND user_id = ?',
-          [media_id, user_id],
+          "DELETE FROM MediaItems WHERE media_id = ? AND user_id = ?",
+          [media_id, user_id]
         );
 
   const [result] = await connection.execute<ResultSetHeader>(sql);
 
   if (result.affectedRows === 0) {
-    return {message: 'Media not deleted'};
+    return { message: "Media not deleted" };
   }
 
   const options = {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: 'Bearer ' + token,
+      Authorization: "Bearer " + token,
     },
   };
 
   try {
     const deleteResult = await fetchData<MessageResponse>(
       `${process.env.UPLOAD_SERVER}/delete/${media.filename}`,
-      options,
+      options
     );
 
-    console.log('deleteResult', deleteResult);
+    console.log("deleteResult", deleteResult);
   } catch (e) {
-    console.error('deleteMedia file delete error:', (e as Error).message);
+    console.error("deleteMedia file delete error:", (e as Error).message);
   }
 
   await connection.commit();
 
   return {
-    message: 'Media item deleted',
+    message: "Media item deleted",
   };
 };
 
@@ -233,7 +233,7 @@ const fetchMostLikedMedia = async (): Promise<MediaItem> => {
   const stmt = promisePool.format(sql, params);
 
   const [rows] = await promisePool.execute<
-    RowDataPacket[] & MediaItem[] & {likes_count: number}
+    RowDataPacket[] & MediaItem[] & { likes_count: number }
   >(stmt);
 
   if (!rows.length) {
