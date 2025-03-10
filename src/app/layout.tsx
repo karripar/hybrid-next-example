@@ -57,8 +57,6 @@ export default async function RootLayout({
               Profile
             </a>
           </li>
-          </>
-          )}
           <li className="mr-4">
             <a
               href="/upload"
@@ -67,6 +65,8 @@ export default async function RootLayout({
               Upload
             </a>
           </li>
+          </>
+          )}
           <li className="mr-4">
             <a
               href="/login"
