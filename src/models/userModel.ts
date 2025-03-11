@@ -45,7 +45,9 @@ const getUserByEmail = async (email: string): Promise<UserWithLevel> => {
   return rows[0];
 };
 
-const getUserByUsername = async (username: string): Promise<UserWithLevel | null> => {
+const getUserByUsername = async (
+  username: string
+): Promise<UserWithLevel | null> => {
   const [rows] = await promisePool.execute<RowDataPacket[] & UserWithLevel[]>(
     `SELECT Users.user_id, Users.username, Users.password, Users.email, Users.created_at, UserLevels.level_name
      FROM Users

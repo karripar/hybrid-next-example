@@ -1,15 +1,15 @@
-import {ErrorResponse} from 'hybrid-types/MessageTypes';
+import { ErrorResponse } from "hybrid-types/MessageTypes";
 
 const fetchData = async <T>(
   url: string,
-  options: RequestInit = {},
+  options: RequestInit = {}
 ): Promise<T> => {
-  console.log('fetching data');
+  console.log("fetching data");
   const response = await fetch(url, options);
   const json = await response.json();
   if (!response.ok) {
     const errorJson = json as unknown as ErrorResponse;
-    console.log('errorJson', errorJson);
+    console.log("errorJson", errorJson);
     if (errorJson.message) {
       throw new Error(errorJson.message);
     }
@@ -18,6 +18,4 @@ const fetchData = async <T>(
   return json;
 };
 
-
-
-export {fetchData};
+export { fetchData };

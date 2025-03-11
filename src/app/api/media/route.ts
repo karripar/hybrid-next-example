@@ -2,9 +2,10 @@ import { fetchData } from "@/lib/functions";
 import { postMedia } from "@/models/mediaModel";
 import { MediaItem, UploadResponse } from "hybrid-types";
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/authActions";
+import { getSession, requireAuth } from "@/lib/authActions";
 
 export async function POST(request: NextRequest) {
+  requireAuth();
   try {
     // Get the form data from the request
     const formData = await request.formData();
@@ -21,10 +22,10 @@ export async function POST(request: NextRequest) {
     // Get the token from the cookie
     const token = request.cookies.get("session")?.value as string;
     if (!token) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "content-type": "application/json" } }
-      );
+      return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      });
     }
 
     // Send the form data to the upload server
@@ -51,11 +52,12 @@ export async function POST(request: NextRequest) {
 
     // Get user_id from the session
     const session = await getSession();
+
     if (!session) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "content-type": "application/json" } }
-      );
+      return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      });
     }
 
     const user_id = session.user_id;
@@ -90,7 +92,6 @@ export async function POST(request: NextRequest) {
       }),
       { headers: { "content-type": "application/json" } }
     );
-
   } catch (error) {
     console.error("Error:", error);
     return new NextResponse(

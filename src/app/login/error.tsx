@@ -13,9 +13,7 @@ export default function Error({
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error);
-    setErrorText(
-      error.message || "An error occurred. Please try again later."
-    );
+    setErrorText(error.message || "An error occurred. Please try again later.");
   }, [error]);
 
   return (

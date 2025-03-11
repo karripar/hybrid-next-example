@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
-import { login, logout } from '@/lib/authActions';
+import { redirect } from "next/navigation";
+import { login, logout } from "@/lib/authActions";
 
 const Login = () => {
   return (
@@ -7,9 +7,9 @@ const Login = () => {
       <div className="flex flex-col p-8">
         <form
           action={async (formData) => {
-            'use server';
+            "use server";
             await login(formData);
-            redirect('/');
+            redirect("/");
           }}
         >
           <div className="mb-4">
@@ -51,9 +51,9 @@ const Login = () => {
         </form>
         <form
           action={async () => {
-            'use server';
+            "use server";
             await logout();
-            redirect('/');
+            redirect("/");
           }}
         >
           <button
@@ -66,6 +66,6 @@ const Login = () => {
       </div>
     </section>
   );
-}
+};
 
 export default Login;

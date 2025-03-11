@@ -1,7 +1,7 @@
 "use client";
 import CustomError from "@/classes/CustomError";
 import { fetchData } from "@/lib/functions";
-import { UploadResponse } from "hybrid-types";
+import { MediaResponse, MessageResponse } from "hybrid-types";
 import { useRouter } from "next/navigation";
 
 const MediaForm = () => {
@@ -18,7 +18,7 @@ const MediaForm = () => {
         method: "POST",
         body: formData,
       };
-      const uploadResult = await fetchData<UploadResponse>(
+      const uploadResult = await fetchData<MediaResponse>(
         "/api/media",
         options
       );
@@ -26,6 +26,28 @@ const MediaForm = () => {
       if (!uploadResult) {
         throw new CustomError("Error uploading media", 500);
       }
+
+
+      const data = {tag_name: formData.get('tag'), media_id: uploadResult.media.media_id};
+
+      const tagOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      };
+
+      const tagResult = await fetchData<MessageResponse>(
+        "/api/tags", tagOptions
+      );
+
+      if (!tagResult) {
+        throw new CustomError("Error posting tag", 500);
+      }
+
+      
+      
 
       router.push("/");
     } catch (error) {
@@ -63,6 +85,23 @@ const MediaForm = () => {
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
+
+        <div className="mb-4">
+          <label
+            htmlFor="tag"
+            className="block text-gray-700 text-sm font-bold mb-2"
+          >
+            Tag
+          </label>
+          <input
+            type="text"
+            name="tag"
+            id="tag"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+
+
         <div className="mb-4">
           <label
             htmlFor="file"

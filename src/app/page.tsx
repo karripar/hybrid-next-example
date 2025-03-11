@@ -1,4 +1,4 @@
-import MediaList from '@/components/MediaList';
+import MediaList from "@/components/MediaList";
 
 const MediaPage = () => {
   return (

@@ -5,9 +5,7 @@ const Upload = async () => {
   await requireAuth();
   return (
     <main>
-      <h1 className="text-4xl font-bold">
-        Upload
-      </h1>
+      <h1 className="text-4xl font-bold">Upload</h1>
       <MediaForm />
     </main>
   );

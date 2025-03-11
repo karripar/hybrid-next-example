@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import mysql from "mysql2/promise";
 
 const promisePool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -11,13 +11,13 @@ const promisePool = mysql.createPool({
   // Convert JSON fields to objects
   typeCast: function (field, next) {
     // Check for both string 'JSON' and MySQL type code 245
-    if (field.name === 'screenshots') {
-      const fieldValue = field.string('utf-8');
+    if (field.name === "screenshots") {
+      const fieldValue = field.string("utf-8");
       if (fieldValue) {
         try {
           return JSON.parse(fieldValue);
         } catch (error) {
-          console.error('Failed to parse JSON field:', {
+          console.error("Failed to parse JSON field:", {
             error: (error as Error).message,
             field: field.name,
             table: field.table,

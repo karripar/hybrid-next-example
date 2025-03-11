@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
       {
         hostname: "media2.edu.metropolia.fi",
         protocol: "https",
-        port: '',
-        search: ''
+        port: "",
+        search: "",
       },
     ],
   },
