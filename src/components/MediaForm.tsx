@@ -27,7 +27,7 @@ const MediaForm = () => {
         throw new CustomError("Error uploading media", 500);
       }
 
-
+      
       const data = {tag_name: formData.get('tag'), media_id: uploadResult.media.media_id};
 
       const tagOptions = {
@@ -46,7 +46,26 @@ const MediaForm = () => {
         throw new CustomError("Error posting tag", 500);
       }
 
-      
+      // lisätään sovelluskohtainen tägi
+      const appData = {tag_name: 'kiskis', media_id: uploadResult.media.media_id};
+
+      const appTagOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(appData),
+      };
+
+      const appTagResult = await fetchData<MessageResponse>(
+        "/api/tags", appTagOptions
+      );
+
+      if (!appTagResult) {
+        throw new CustomError("Error posting tag", 500);
+      }
+
+
       
 
       router.push("/");
